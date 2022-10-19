@@ -111,6 +111,7 @@ class FlutterPainterExampleState extends State<FlutterPainterExample> {
               return AppBar(
                 title: child,
                 actions: [
+                  // 设置配置栏是否可见的按钮
                   IconButton(
                     onPressed: () => setState(() {
                       visible = !visible;
@@ -118,24 +119,24 @@ class FlutterPainterExampleState extends State<FlutterPainterExample> {
                     icon: const Icon(PhosphorIcons.gear),
                   ),
                   // Delete the selected drawable
-                  IconButton(
-                    icon: const Icon(
-                      PhosphorIcons.trash,
-                    ),
-                    onPressed: controller.selectedObjectDrawable == null
-                        ? null
-                        : removeSelectedDrawable,
-                  ),
-                  // Delete the selected drawable
-                  IconButton(
-                    icon: const Icon(
-                      Icons.flip,
-                    ),
-                    onPressed: controller.selectedObjectDrawable != null &&
-                            controller.selectedObjectDrawable is ImageDrawable
-                        ? flipSelectedImageDrawable
-                        : null,
-                  ),
+                  // IconButton(
+                  //   icon: const Icon(
+                  //     PhosphorIcons.trash,
+                  //   ),
+                  //   onPressed: controller.selectedObjectDrawable == null
+                  //       ? null
+                  //       : removeSelectedDrawable,
+                  // ),
+                  // Flip the selected drawable
+                  // IconButton(
+                  //   icon: const Icon(
+                  //     Icons.flip,
+                  //   ),
+                  //   onPressed: controller.selectedObjectDrawable != null &&
+                  //           controller.selectedObjectDrawable is ImageDrawable
+                  //       ? flipSelectedImageDrawable
+                  //       : null,
+                  // ),
                   // Redo action
                   IconButton(
                     icon: const Icon(
@@ -197,12 +198,40 @@ class FlutterPainterExampleState extends State<FlutterPainterExample> {
                     //   ),
                     //   onPressed: toggleFreeStyleErase,
                     // ),
+                    // Free-style refresh
+                    IconButton(
+                      icon: const Icon(
+                        PhosphorIcons.arrowsClockwise,
+                      ),
+                      onPressed: controller.drawables.isEmpty == true
+                          ? null
+                          : controller.clearDrawables,
+                    ),
+                    // click the cursor
+                    IconButton(
+                      icon: Icon(
+                        PhosphorIcons.cursor,
+                        color: controller.freeStyleMode == FreeStyleMode.none
+                            ? Theme.of(context).colorScheme.secondary
+                            : null,
+                      ),
+                      onPressed: clickCursor,
+                    ),
+                    // Delete the selected drawable
+                    IconButton(
+                      icon: const Icon(
+                        PhosphorIcons.eraser,
+                      ),
+                      onPressed: controller.selectedObjectDrawable == null
+                          ? null
+                          : removeSelectedDrawable,
+                    ),
                     // Free-style drawing
                     IconButton(
                       icon: Icon(
                         PhosphorIcons.scribbleLoop,
                         color: controller.freeStyleMode == FreeStyleMode.draw
-                            ? Theme.of(context).accentColor
+                            ? Theme.of(context).colorScheme.secondary
                             : null,
                       ),
                       onPressed: toggleFreeStyleDraw,
@@ -212,7 +241,7 @@ class FlutterPainterExampleState extends State<FlutterPainterExample> {
                       icon: Icon(
                         PhosphorIcons.textT,
                         color: textFocusNode.hasFocus
-                            ? Theme.of(context).accentColor
+                            ? Theme.of(context).colorScheme.secondary
                             : null,
                       ),
                       onPressed: addText,
@@ -515,6 +544,13 @@ class FlutterPainterExampleState extends State<FlutterPainterExample> {
     controller.freeStyleMode = controller.freeStyleMode != FreeStyleMode.erase
         ? FreeStyleMode.erase
         : FreeStyleMode.none;
+  }
+
+  void clickCursor() {
+    setState(() {
+      visible = false;
+    });
+    controller.freeStyleMode = FreeStyleMode.none;
   }
 
   void addText() {
