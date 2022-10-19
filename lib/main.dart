@@ -32,7 +32,10 @@ class FlutterPainterExampleState extends State<FlutterPainterExample> {
   static const Color red = Color(0xFFFF0000);
   FocusNode textFocusNode = FocusNode();
   late PainterController controller;
+  // 设置文字控制条是否出现
   bool visible = true;
+  // 设置是否使用图片背景
+  bool isImageBackground = false;
   ui.Image? backgroundImage;
   Paint shapePaint = Paint()
     ..strokeWidth = 5
@@ -49,28 +52,32 @@ class FlutterPainterExampleState extends State<FlutterPainterExample> {
   void initState() {
     super.initState();
     controller = PainterController(
-        settings: PainterSettings(
-            text: TextSettings(
-              focusNode: textFocusNode,
-              textStyle: const TextStyle(
-                  fontWeight: FontWeight.bold, color: red, fontSize: 18),
-            ),
-            freeStyle: const FreeStyleSettings(
-              color: red,
-              strokeWidth: 5,
-            ),
-            shape: ShapeSettings(
-              paint: shapePaint,
-            ),
-            scale: const ScaleSettings(
-              enabled: true,
-              minScale: 1,
-              maxScale: 10,
-            )));
+      settings: PainterSettings(
+          text: TextSettings(
+            focusNode: textFocusNode,
+            textStyle: const TextStyle(
+                fontWeight: FontWeight.bold, color: red, fontSize: 18),
+          ),
+          freeStyle: const FreeStyleSettings(
+            color: red,
+            strokeWidth: 5,
+          ),
+          shape: ShapeSettings(
+            paint: shapePaint,
+          ),
+          scale: const ScaleSettings(
+            enabled: true,
+            minScale: 1,
+            maxScale: 10,
+          )),
+      background: const ColorBackgroundDrawable(color: Colors.white),
+    );
     // Listen to focus events of the text field
     textFocusNode.addListener(onFocus);
     // Initialize background
-    initBackground();
+    if (isImageBackground) {
+      initBackground();
+    }
   }
 
   /// Fetches image from an [ImageProvider] (in this example, [NetworkImage])
@@ -104,6 +111,12 @@ class FlutterPainterExampleState extends State<FlutterPainterExample> {
               return AppBar(
                 title: child,
                 actions: [
+                  IconButton(
+                    onPressed: () => setState(() {
+                      visible = !visible;
+                    }),
+                    icon: const Icon(PhosphorIcons.gear),
+                  ),
                   // Delete the selected drawable
                   IconButton(
                     icon: const Icon(
@@ -150,7 +163,8 @@ class FlutterPainterExampleState extends State<FlutterPainterExample> {
       ),
       body: Stack(
         children: [
-          if (backgroundImage != null)
+          // 背景
+          if (backgroundImage != null || !isImageBackground)
             // Enforces constraints
             Positioned.fill(
               child: Center(
@@ -163,6 +177,7 @@ class FlutterPainterExampleState extends State<FlutterPainterExample> {
                 // ),
               ),
             ),
+          // 工具条
           Positioned(
               top: 0,
               right: 0,
@@ -280,164 +295,172 @@ class FlutterPainterExampleState extends State<FlutterPainterExample> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (controller.freeStyleMode !=
-                              FreeStyleMode.none) ...[
-                            // const Divider(),,
-                            const Text("Free Style Settings"),
-                            // Control free style stroke width
-                            Row(
-                              children: [
-                                const Expanded(
-                                    flex: 1, child: Text("Stroke Width")),
-                                Expanded(
-                                  flex: 3,
-                                  child: Slider.adaptive(
-                                      min: 2,
-                                      max: 25,
-                                      value: controller.freeStyleStrokeWidth,
-                                      onChanged: setFreeStyleStrokeWidth),
+                          // 判断工具栏是否可见
+                          if (visible) ...[
+                            if (controller.freeStyleMode !=
+                                FreeStyleMode.none) ...[
+                              // const Divider(),,
+                              const Text("Free Style Settings"),
+                              // Control free style stroke width
+                              Row(
+                                children: [
+                                  const Expanded(
+                                      flex: 1, child: Text("Stroke Width")),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Slider.adaptive(
+                                        min: 2,
+                                        max: 25,
+                                        value: controller.freeStyleStrokeWidth,
+                                        onChanged: setFreeStyleStrokeWidth),
+                                  ),
+                                ],
+                              ),
+                              if (controller.freeStyleMode ==
+                                  FreeStyleMode.draw)
+                                Row(
+                                  children: [
+                                    const Expanded(
+                                        flex: 1, child: Text("Color")),
+                                    // Control free style color hue
+                                    Expanded(
+                                      flex: 3,
+                                      child: Slider.adaptive(
+                                          min: 0,
+                                          max: 359.99,
+                                          value: HSVColor.fromColor(
+                                                  controller.freeStyleColor)
+                                              .hue,
+                                          activeColor:
+                                              controller.freeStyleColor,
+                                          onChanged: setFreeStyleColor),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            if (controller.freeStyleMode == FreeStyleMode.draw)
+                            ],
+                            if (textFocusNode.hasFocus) ...[
+                              // const Divider(),
+                              const Text("Text settings"),
+                              // Control text font size
+                              Row(
+                                children: [
+                                  const Expanded(
+                                      flex: 1, child: Text("Font Size")),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Slider.adaptive(
+                                        min: 8,
+                                        max: 96,
+                                        value:
+                                            controller.textStyle.fontSize ?? 14,
+                                        onChanged: setTextFontSize),
+                                  ),
+                                ],
+                              ),
+
+                              // Control text color hue
                               Row(
                                 children: [
                                   const Expanded(flex: 1, child: Text("Color")),
-                                  // Control free style color hue
                                   Expanded(
                                     flex: 3,
                                     child: Slider.adaptive(
                                         min: 0,
                                         max: 359.99,
                                         value: HSVColor.fromColor(
-                                                controller.freeStyleColor)
+                                                controller.textStyle.color ??
+                                                    red)
                                             .hue,
-                                        activeColor: controller.freeStyleColor,
-                                        onChanged: setFreeStyleColor),
+                                        activeColor: controller.textStyle.color,
+                                        onChanged: setTextColor),
                                   ),
                                 ],
                               ),
-                          ],
-                          if (textFocusNode.hasFocus && visible) ...[
-                            // const Divider(),
-                            const Text("Text settings"),
-                            // Control text font size
-                            Row(
-                              children: [
-                                const Expanded(
-                                    flex: 1, child: Text("Font Size")),
-                                Expanded(
-                                  flex: 3,
-                                  child: Slider.adaptive(
-                                      min: 8,
-                                      max: 96,
-                                      value:
-                                          controller.textStyle.fontSize ?? 14,
-                                      onChanged: setTextFontSize),
-                                ),
-                              ],
-                            ),
+                            ],
+                            if (controller.shapeFactory != null) ...[
+                              // const Divider(),,
+                              const Text("Shape Settings"),
 
-                            // Control text color hue
-                            Row(
-                              children: [
-                                const Expanded(flex: 1, child: Text("Color")),
-                                Expanded(
-                                  flex: 3,
-                                  child: Slider.adaptive(
-                                      min: 0,
-                                      max: 359.99,
-                                      value: HSVColor.fromColor(
-                                              controller.textStyle.color ?? red)
-                                          .hue,
-                                      activeColor: controller.textStyle.color,
-                                      onChanged: setTextColor),
-                                ),
-                              ],
-                            ),
-                          ],
-                          if (controller.shapeFactory != null) ...[
-                            // const Divider(),,
-                            const Text("Shape Settings"),
-
-                            // Control text color hue
-                            Row(
-                              children: [
-                                const Expanded(
-                                    flex: 1, child: Text("Stroke Width")),
-                                Expanded(
-                                  flex: 3,
-                                  child: Slider.adaptive(
-                                      min: 2,
-                                      max: 25,
-                                      value:
-                                          controller.shapePaint?.strokeWidth ??
-                                              shapePaint.strokeWidth,
-                                      onChanged: (value) =>
-                                          setShapeFactoryPaint(
-                                              (controller.shapePaint ??
-                                                      shapePaint)
-                                                  .copyWith(
-                                            strokeWidth: value,
-                                          ))),
-                                ),
-                              ],
-                            ),
-
-                            // Control shape color hue
-                            Row(
-                              children: [
-                                const Expanded(flex: 1, child: Text("Color")),
-                                Expanded(
-                                  flex: 3,
-                                  child: Slider.adaptive(
-                                      min: 0,
-                                      max: 359.99,
-                                      value: HSVColor.fromColor(
-                                              (controller.shapePaint ??
-                                                      shapePaint)
-                                                  .color)
-                                          .hue,
-                                      activeColor:
-                                          (controller.shapePaint ?? shapePaint)
-                                              .color,
-                                      onChanged: (hue) => setShapeFactoryPaint(
-                                              (controller.shapePaint ??
-                                                      shapePaint)
-                                                  .copyWith(
-                                            color:
-                                                HSVColor.fromAHSV(1, hue, 1, 1)
-                                                    .toColor(),
-                                          ))),
-                                ),
-                              ],
-                            ),
-
-                            Row(
-                              children: [
-                                const Expanded(
-                                    flex: 1, child: Text("Fill shape")),
-                                Expanded(
-                                  flex: 3,
-                                  child: Center(
-                                    child: Switch(
-                                        value: (controller.shapePaint ??
-                                                    shapePaint)
-                                                .style ==
-                                            PaintingStyle.fill,
+                              // Control text color hue
+                              Row(
+                                children: [
+                                  const Expanded(
+                                      flex: 1, child: Text("Stroke Width")),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Slider.adaptive(
+                                        min: 2,
+                                        max: 25,
+                                        value: controller
+                                                .shapePaint?.strokeWidth ??
+                                            shapePaint.strokeWidth,
                                         onChanged: (value) =>
                                             setShapeFactoryPaint(
                                                 (controller.shapePaint ??
                                                         shapePaint)
                                                     .copyWith(
-                                              style: value
-                                                  ? PaintingStyle.fill
-                                                  : PaintingStyle.stroke,
+                                              strokeWidth: value,
                                             ))),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
+
+                              // Control shape color hue
+                              Row(
+                                children: [
+                                  const Expanded(flex: 1, child: Text("Color")),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Slider.adaptive(
+                                        min: 0,
+                                        max: 359.99,
+                                        value: HSVColor.fromColor(
+                                                (controller.shapePaint ??
+                                                        shapePaint)
+                                                    .color)
+                                            .hue,
+                                        activeColor: (controller.shapePaint ??
+                                                shapePaint)
+                                            .color,
+                                        onChanged: (hue) =>
+                                            setShapeFactoryPaint(
+                                                (controller.shapePaint ??
+                                                        shapePaint)
+                                                    .copyWith(
+                                              color: HSVColor.fromAHSV(
+                                                      1, hue, 1, 1)
+                                                  .toColor(),
+                                            ))),
+                                  ),
+                                ],
+                              ),
+
+                              Row(
+                                children: [
+                                  const Expanded(
+                                      flex: 1, child: Text("Fill shape")),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Center(
+                                      child: Switch(
+                                          value: (controller.shapePaint ??
+                                                      shapePaint)
+                                                  .style ==
+                                              PaintingStyle.fill,
+                                          onChanged: (value) =>
+                                              setShapeFactoryPaint(
+                                                  (controller.shapePaint ??
+                                                          shapePaint)
+                                                      .copyWith(
+                                                style: value
+                                                    ? PaintingStyle.fill
+                                                    : PaintingStyle.stroke,
+                                              ))),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ]
                           ]
                         ],
                       ),
@@ -477,18 +500,27 @@ class FlutterPainterExampleState extends State<FlutterPainterExample> {
   }
 
   void toggleFreeStyleDraw() {
+    setState(() {
+      visible = false;
+    });
     controller.freeStyleMode = controller.freeStyleMode != FreeStyleMode.draw
         ? FreeStyleMode.draw
         : FreeStyleMode.none;
   }
 
   void toggleFreeStyleErase() {
+    setState(() {
+      visible = false;
+    });
     controller.freeStyleMode = controller.freeStyleMode != FreeStyleMode.erase
         ? FreeStyleMode.erase
         : FreeStyleMode.none;
   }
 
   void addText() {
+    setState(() {
+      visible = false;
+    });
     if (controller.freeStyleMode != FreeStyleMode.none) {
       controller.freeStyleMode = FreeStyleMode.none;
     }
@@ -496,6 +528,9 @@ class FlutterPainterExampleState extends State<FlutterPainterExample> {
   }
 
   void addSticker() async {
+    setState(() {
+      visible = false;
+    });
     final imageLink = await showDialog<String>(
         context: context,
         builder: (context) => const SelectStickerImageDialog(
@@ -526,6 +561,7 @@ class FlutterPainterExampleState extends State<FlutterPainterExample> {
   void setShapeFactoryPaint(Paint paint) {
     // Set state is just to update the current UI, the [FlutterPainter] UI updates without it
     setState(() {
+      visible = false;
       controller.shapePaint = paint;
     });
   }
