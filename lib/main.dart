@@ -188,15 +188,15 @@ class FlutterPainterExampleState extends State<FlutterPainterExample> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     // Free-style eraser
-                    IconButton(
-                      icon: Icon(
-                        PhosphorIcons.eraser,
-                        color: controller.freeStyleMode == FreeStyleMode.erase
-                            ? Theme.of(context).accentColor
-                            : null,
-                      ),
-                      onPressed: toggleFreeStyleErase,
-                    ),
+                    // IconButton(
+                    //   icon: Icon(
+                    //     PhosphorIcons.eraser,
+                    //     color: controller.freeStyleMode == FreeStyleMode.erase
+                    //         ? Theme.of(context).accentColor
+                    //         : null,
+                    //   ),
+                    //   onPressed: toggleFreeStyleErase,
+                    // ),
                     // Free-style drawing
                     IconButton(
                       icon: Icon(
